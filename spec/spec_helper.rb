@@ -1,5 +1,12 @@
+# frozen_string_literal: true
+
+ENV['RAILS_ENV'] ||= 'test'
+ENV['DB'] ||= 'mysql'
+
 require "bundler/setup"
-require "active_record_read_only_error_fallback"
+Bundler.require
+
+require 'fake_app/rails_app'
 
 RSpec.configure do |config|
   # Enable flags like --only-failures and --next-failure
@@ -10,5 +17,9 @@ RSpec.configure do |config|
 
   config.expect_with :rspec do |c|
     c.syntax = :expect
+  end
+
+  config.define_derived_metadata do |meta|
+    meta[:aggregate_failures] = true unless meta.key?(:aggregate_failures)
   end
 end

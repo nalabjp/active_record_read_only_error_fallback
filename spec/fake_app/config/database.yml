@@ -1,0 +1,13 @@
+mysql: &mysql
+  adapter: mysql2
+  host: localhost
+  username: root
+  password:
+  database: arroef_test
+
+test:
+  primary:
+    <<: *<%= ENV['DB'] %>
+  replica:
+    <<: *<%= ENV['DB'] %>
+    replica: true
