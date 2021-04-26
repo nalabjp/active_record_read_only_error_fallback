@@ -1,22 +1,21 @@
 # frozen_string_literal: true
 require 'active_record'
 require 'request_store'
+require 'active_record_read_only_error_fallback/version'
+require 'active_record_read_only_error_fallback/logging'
+require 'active_record_read_only_error_fallback/writable'
+require 'active_record_read_only_error_fallback/database_resolver'
 
 module ActiveRecordReadOnlyErrorFallback
+  extend Writable
+
   REQUIRE_UPDATE_LAST_WRITE_TIMESTAMP = 'active_record_read_only_error_fallback.require_update_last_write_timestamp'
 
   class << self
     def call
       yield
     rescue ActiveRecord::ReadOnlyError => e
-      ActiveRecord::Base.connected_to(role: ActiveRecord::Base.writing_role, prevent_writes: false) do
-        yield
-      ensure
-        # Mark to `RequestStore` for update `last_write_timestamp` to cookie with `ActiveRecordReadOnlyErrorFallback::DatabaseResolver`
-        RequestStore.store[REQUIRE_UPDATE_LAST_WRITE_TIMESTAMP] = true
-
-        Logging.call(e)
-      end
+      with_writable_connection(e) { yield }
     end
 
     def logging=(callable)
@@ -25,9 +24,6 @@ module ActiveRecordReadOnlyErrorFallback
   end
 end
 
-require 'active_record_read_only_error_fallback/version'
-require 'active_record_read_only_error_fallback/logging'
-require 'active_record_read_only_error_fallback/database_resolver'
 
 ActiveSupport.on_load :active_record do
   db_config = Rails.application.config.database_configuration[Rails.env]
