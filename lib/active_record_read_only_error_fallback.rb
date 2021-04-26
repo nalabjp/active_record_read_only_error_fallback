@@ -4,23 +4,14 @@ require 'request_store'
 require 'active_record_read_only_error_fallback/version'
 require 'active_record_read_only_error_fallback/logging'
 require 'active_record_read_only_error_fallback/writable'
+require 'active_record_read_only_error_fallback/query_fallback'
 require 'active_record_read_only_error_fallback/database_resolver'
 
 module ActiveRecordReadOnlyErrorFallback
-  extend Writable
-
   REQUIRE_UPDATE_LAST_WRITE_TIMESTAMP = 'active_record_read_only_error_fallback.require_update_last_write_timestamp'
 
-  class << self
-    def call
-      yield
-    rescue ActiveRecord::ReadOnlyError => e
-      with_writable_connection(e) { yield }
-    end
-
-    def logging=(callable)
-      Logging.handler = callable
-    end
+  def self.logging=(callable)
+    Logging.handler = callable
   end
 end
 

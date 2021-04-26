@@ -1,16 +1,16 @@
 # frozen_string_literal: true
 
-RSpec.describe ActiveRecordReadOnlyErrorFallback do
+RSpec.describe ActiveRecordReadOnlyErrorFallback::QueryFallback do
   let(:result) { Struct.new('LoggingResult', :error).new }
   let(:logging) { ->(e) { result.error = e } }
 
   before do
     RequestStore.clear!
-    described_class.logging = logging
+    ActiveRecordReadOnlyErrorFallback.logging = logging
   end
 
   after do
-    described_class.logging = nil
+    ActiveRecordReadOnlyErrorFallback.logging = nil
   end
 
   context 'with `reading_role` connection' do
@@ -24,7 +24,7 @@ RSpec.describe ActiveRecordReadOnlyErrorFallback do
       it do
         expect(subject).to be_instance_of User
         expect(result.error).to be_instance_of ActiveRecord::ReadOnlyError
-        expect(RequestStore.store[described_class::REQUIRE_UPDATE_LAST_WRITE_TIMESTAMP]).to eq true
+        expect(RequestStore.store[ActiveRecordReadOnlyErrorFallback::REQUIRE_UPDATE_LAST_WRITE_TIMESTAMP]).to eq true
       end
     end
 
@@ -34,7 +34,7 @@ RSpec.describe ActiveRecordReadOnlyErrorFallback do
       it do
         expect { subject }.to raise_error ActiveRecord::RecordInvalid
         expect(result.error).to be_nil
-        expect(RequestStore.store[described_class::REQUIRE_UPDATE_LAST_WRITE_TIMESTAMP]).to be_nil
+        expect(RequestStore.store[ActiveRecordReadOnlyErrorFallback::REQUIRE_UPDATE_LAST_WRITE_TIMESTAMP]).to be_nil
       end
     end
 
@@ -45,7 +45,7 @@ RSpec.describe ActiveRecordReadOnlyErrorFallback do
 
       it do
         expect(subject).to be_instance_of User
-        expect(RequestStore.store[described_class::REQUIRE_UPDATE_LAST_WRITE_TIMESTAMP]).to eq true
+        expect(RequestStore.store[ActiveRecordReadOnlyErrorFallback::REQUIRE_UPDATE_LAST_WRITE_TIMESTAMP]).to eq true
       end
     end
   end

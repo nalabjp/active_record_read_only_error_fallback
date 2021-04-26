@@ -4,13 +4,13 @@ require "active_record/connection_adapters/mysql2_adapter"
 module ActiveRecordReadOnlyErrorFallback
   module MysqlDatabaseStatements
     def execute(*)
-      ActiveRecordReadOnlyErrorFallback.call { super }
+      ActiveRecordReadOnlyErrorFallback::QueryFallback.call { super }
     end
 
     private
 
     def exec_stmt_and_free(*)
-      ActiveRecordReadOnlyErrorFallback.call { super }
+      ActiveRecordReadOnlyErrorFallback::QueryFallback.call { super }
     end
   end
 end
