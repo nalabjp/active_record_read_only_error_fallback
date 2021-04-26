@@ -9,31 +9,24 @@ module ActiveRecordReadOnlyErrorFallback
     def call
       yield
     rescue ActiveRecord::ReadOnlyError => e
-      res = ActiveRecord::Base.connected_to(role: ActiveRecord::Base.writing_role, prevent_writes: false) { yield }
+      ActiveRecord::Base.connected_to(role: ActiveRecord::Base.writing_role, prevent_writes: false) do
+        yield
+      ensure
+        # Mark to `RequestStore` for update `last_write_timestamp` to cookie with `ActiveRecordReadOnlyErrorFallback::DatabaseResolver`
+        RequestStore.store[REQUIRE_UPDATE_LAST_WRITE_TIMESTAMP] = true
 
-      # Mark to `RequestStore` for update `last_write_timestamp` to cookie with `ActiveRecordReadOnlyErrorFallback::DatabaseResolver`
-      RequestStore.store[REQUIRE_UPDATE_LAST_WRITE_TIMESTAMP] = true
-
-      log(e) rescue nil
-
-      res
+        Logging.call(e)
+      end
     end
 
     def logging=(callable)
-      @logging = callable
-    end
-
-    private
-
-    def logging; @logging; end
-
-    def log(error)
-      logging.call(error) if logging&.respond_to?(:call)
+      Logging.handler = callable
     end
   end
 end
 
 require 'active_record_read_only_error_fallback/version'
+require 'active_record_read_only_error_fallback/logging'
 require 'active_record_read_only_error_fallback/database_resolver'
 
 ActiveSupport.on_load :active_record do
