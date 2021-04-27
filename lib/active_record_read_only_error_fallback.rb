@@ -21,6 +21,6 @@ ActiveSupport.on_load :active_record do
   adapter = db_config.size > 1 ? db_config.values.first['adapter'] : nil
   case adapter
   when 'mysql2'
-    require 'active_record_read_only_error_fallback/mysql_database_statements'
+    require 'active_record_read_only_error_fallback/extensions/mysql_database_statements'
   end
 end
