@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
 RSpec.describe ActiveRecordReadOnlyErrorFallback::QueryFallback do
-  let(:result) { Struct.new('LoggingResult', :error).new }
-  let(:logging) { ->(e) { result.error = e } }
+  let(:result) { Struct.new('LoggingResult', :cause, :locations).new }
+  let(:logging) { ->(args) { result.cause = args[:cause]; result.locations = args[:locations] } }
 
   before do
     RequestStore.clear!
@@ -23,7 +23,8 @@ RSpec.describe ActiveRecordReadOnlyErrorFallback::QueryFallback do
 
       it do
         expect(subject).to be_instance_of User
-        expect(result.error).to be_instance_of ActiveRecord::ReadOnlyError
+        expect(result.cause).to eq 'QUERY'
+        expect(result.locations).to all(be_instance_of Thread::Backtrace::Location)
         expect(RequestStore.store[ActiveRecordReadOnlyErrorFallback::REQUIRE_UPDATE_LAST_WRITE_TIMESTAMP]).to eq true
       end
     end
@@ -33,7 +34,8 @@ RSpec.describe ActiveRecordReadOnlyErrorFallback::QueryFallback do
 
       it do
         expect { subject }.to raise_error ActiveRecord::RecordInvalid
-        expect(result.error).to be_nil
+        expect(result.cause).to be_nil
+        expect(result.locations).to be_nil
         expect(RequestStore.store[ActiveRecordReadOnlyErrorFallback::REQUIRE_UPDATE_LAST_WRITE_TIMESTAMP]).to be_nil
       end
     end
@@ -41,7 +43,7 @@ RSpec.describe ActiveRecordReadOnlyErrorFallback::QueryFallback do
     context 'Fallback successful, but unexpected error occurs' do
       subject { described_class.call { User.create!(name: 'nalabjp') } }
 
-      let(:logging) { ->(e, l) { raise 'Unexpected error' } }
+      let(:logging) { ->(_args) { raise 'Unexpected error' } }
 
       it do
         expect(subject).to be_instance_of User

@@ -9,7 +9,7 @@ module ActiveRecordReadOnlyErrorFallback
       if ActiveRecord::Base.connection.transaction_open?
         raise e
       else
-        with_writable_connection(e) { yield }
+        with_writable_connection(cause: 'QUERY', locations: e.backtrace_locations) { yield }
       end
     end
   end

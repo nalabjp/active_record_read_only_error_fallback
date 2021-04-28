@@ -4,8 +4,8 @@ module ActiveRecordReadOnlyErrorFallback
     class << self
       attr_accessor :handler
 
-      def call(error_or_locations)
-        handler.call(error_or_locations) if handler&.respond_to?(:call)
+      def call(cause:, locations:)
+        handler.call(cause: cause, locations: locations) if handler&.respond_to?(:call)
       rescue
         # nothing to do
       end

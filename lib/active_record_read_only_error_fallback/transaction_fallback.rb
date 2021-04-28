@@ -5,7 +5,7 @@ module ActiveRecordReadOnlyErrorFallback
 
     def self.call
       if ActiveRecord::Base.connected_to?(role: ActiveRecord::Base.reading_role)
-        with_writable_connection(caller_locations) { yield }
+        with_writable_connection(cause: 'TRANSACTION', locations: caller_locations) { yield }
       else
         yield
       end

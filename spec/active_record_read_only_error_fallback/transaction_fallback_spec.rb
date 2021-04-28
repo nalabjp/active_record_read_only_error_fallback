@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
 RSpec.describe ActiveRecordReadOnlyErrorFallback::TransactionFallback do
-  let(:result) { Struct.new('LoggingResult', :locations).new }
-  let(:logging) { ->(l) { result.locations = l } }
+  let(:result) { Struct.new('LoggingResult', :cause, :locations).new }
+  let(:logging) { ->(args) { result.cause = args[:cause]; result.locations = args[:locations] } }
 
   before do
     ActiveRecordReadOnlyErrorFallback.logging = logging
@@ -20,6 +20,7 @@ RSpec.describe ActiveRecordReadOnlyErrorFallback::TransactionFallback do
         end
       end
 
+      expect(result.cause).to eq 'TRANSACTION'
       expect(result.locations).to all(be_instance_of Thread::Backtrace::Location)
     end
   end
@@ -35,6 +36,7 @@ RSpec.describe ActiveRecordReadOnlyErrorFallback::TransactionFallback do
             end
           end
 
+          expect(result.cause).to eq 'TRANSACTION'
           expect(result.locations).to all(be_instance_of Thread::Backtrace::Location)
         end
       end
@@ -48,6 +50,7 @@ RSpec.describe ActiveRecordReadOnlyErrorFallback::TransactionFallback do
             end
           end
 
+          expect(result.cause).to eq 'TRANSACTION'
           expect(result.locations).to all(be_instance_of Thread::Backtrace::Location)
         end
       end
