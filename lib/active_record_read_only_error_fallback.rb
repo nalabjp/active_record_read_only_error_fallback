@@ -5,6 +5,7 @@ require 'active_record_read_only_error_fallback/version'
 require 'active_record_read_only_error_fallback/logging'
 require 'active_record_read_only_error_fallback/writable'
 require 'active_record_read_only_error_fallback/query_fallback'
+require 'active_record_read_only_error_fallback/transaction_fallback'
 require 'active_record_read_only_error_fallback/database_resolver'
 
 module ActiveRecordReadOnlyErrorFallback
@@ -22,5 +23,6 @@ ActiveSupport.on_load :active_record do
   case adapter
   when 'mysql2'
     require 'active_record_read_only_error_fallback/extensions/mysql_database_statements'
+    require 'active_record_read_only_error_fallback/extensions/transaction.rb'
   end
 end
